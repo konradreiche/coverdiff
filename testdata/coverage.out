@@ -1,0 +1,10 @@
+mode: set
+github.com/konradreiche/coverdiff/testdata/size/size.go:3.25,4.9 1 1
+github.com/konradreiche/coverdiff/testdata/size/size.go:5.13,6.20 1 1
+github.com/konradreiche/coverdiff/testdata/size/size.go:7.14,8.16 1 0
+github.com/konradreiche/coverdiff/testdata/size/size.go:9.14,10.17 1 1
+github.com/konradreiche/coverdiff/testdata/size/size.go:11.15,12.15 1 0
+github.com/konradreiche/coverdiff/testdata/size/size.go:13.16,14.16 1 0
+github.com/konradreiche/coverdiff/testdata/size/size.go:17.2,17.15 1 1
+github.com/konradreiche/coverdiff/testdata/size/size.go:17.15,19.3 1 0
+github.com/konradreiche/coverdiff/testdata/size/size.go:21.2,21.19 1 1
