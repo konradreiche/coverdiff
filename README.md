@@ -8,7 +8,7 @@ Print your Go test coverage line-by-line in the form of a code diff, highlightin
 ## Getting Started
 
 ```
-go install github.com/konradreiche/coverdiff
+go install github.com/konradreiche/coverdiff@latest
 ```
 
 ## Usage
