@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"path/filepath"
 	"runtime"
-	"runtime/debug"
 	"testing"
 
 	"golang.org/x/tools/cover"
@@ -20,13 +19,13 @@ func TestPrintDiff(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	bi, ok := debug.ReadBuildInfo()
-	if !ok {
-		t.Fatal("binary build information not available")
+	moduleInfo, err := findModuleInfo()
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	var b bytes.Buffer
-	if err := printDiff(&b, profiles, bi.Path); err != nil {
+	if err := printDiff(&b, profiles, moduleInfo); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -45,6 +45,29 @@ func TestCommand(t *testing.T) {
 		}
 	})
 
+	t.Run("from-file-in-subdirectory", func(t *testing.T) {
+		if err := os.Chdir("testdata"); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			if err := os.Chdir(projectPath); err != nil {
+				t.Fatal(err)
+			}
+		})
+		os.Args[1] = filepath.Join(projectPath, "testdata/coverage.out")
+
+		var stdout bytes.Buffer
+		if err := command(nil, &stdout); err != nil {
+			t.Fatal(err)
+		}
+
+		got := stdout.String()
+		want := readFile(t, "coverdiff.out")
+		if got != want {
+			t.Errorf("got len=%d, want len=%d", len(got), len(want))
+		}
+	})
+
 	t.Run("outside-go-module", func(t *testing.T) {
 		changeDir(t, "..")
 

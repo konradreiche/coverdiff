@@ -9,12 +9,11 @@ import (
 	"golang.org/x/tools/cover"
 )
 
-func printDiff(stdout io.Writer, profiles []*cover.Profile, modulePath string) error {
+func printDiff(stdout io.Writer, profiles []*cover.Profile, moduleInfo moduleInfo) error {
 	for _, profile := range profiles {
-		// create file path using absolute path to module
-		filepath := strings.ReplaceAll(profile.FileName, modulePath+"/", "")
-
-		b, err := os.ReadFile(filepath)
+		// use absolute path to module to read source code
+		absPath := strings.ReplaceAll(profile.FileName, moduleInfo.modulePath, moduleInfo.moduleDir)
+		b, err := os.ReadFile(absPath)
 		if err != nil {
 			return fmt.Errorf("os.ReadFile: %w", err)
 		}
@@ -34,10 +33,13 @@ func printDiff(stdout io.Writer, profiles []*cover.Profile, modulePath string) e
 			}
 		}
 
+		// use relative path to source code for diff headers
+		relPath := strings.ReplaceAll(profile.FileName, moduleInfo.modulePath+"/", "")
+
 		// print diff file headers
-		fmt.Fprintf(stdout, "diff --git a/%s b/%s\n", filepath, filepath)
-		fmt.Fprintf(stdout, "--- a/%s\n", filepath)
-		fmt.Fprintf(stdout, "+++ b/%s\n", filepath)
+		fmt.Fprintf(stdout, "diff --git a/%s b/%s\n", relPath, relPath)
+		fmt.Fprintf(stdout, "--- a/%s\n", relPath)
+		fmt.Fprintf(stdout, "+++ b/%s\n", relPath)
 
 		// print diff index header
 		fmt.Fprintf(stdout, "@@ -%d,%d +%d,%d @@ %s\n", 0, 0, len(lines), 0, lines[0])

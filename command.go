@@ -20,7 +20,7 @@ func command(stdin io.Reader, stdout io.Writer) error {
 	if err != nil {
 		return err
 	}
-	return printDiff(stdout, profiles, moduleInfo.modulePath)
+	return printDiff(stdout, profiles, moduleInfo)
 }
 
 func parseCoverProfiles(stdin io.Reader) ([]*cover.Profile, error) {
