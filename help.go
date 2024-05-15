@@ -9,16 +9,19 @@ const usage = `📑 coverdiff - print Go test coverage as diff
 
 Usage:
 	coverdiff [file]
+	coverdiff test
 
 Flags:
 	-h, --help	print help text
 
-coverdiff is a tool designed to process the cover profile output of Go and
-display the coverage as a diff, similar to Go's -html option but optimized for
-terminal convenience. You can provide the cover profile as a file or pass it
-through standard input.
+coverdiff is a tool that processes Go cover profiles and displays coverage
+differences directly on the terminal, similar to Go's -html option. You can
+provide the cover profile as a file, pass it through standard input, or let
+coverdiff run the Go tests.
 
 Examples:
+
+	coverdiff test
 
 	go test -cover -coverprofile=coverage.out
 	cat coverage.out | coverdiff

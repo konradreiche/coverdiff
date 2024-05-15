@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,6 +17,24 @@ func TestCommand(t *testing.T) {
 		os.Args = []string{
 			"coverdiff",
 		}
+		flag.Parse()
+
+		var stdout bytes.Buffer
+		stdin := bytes.NewBufferString(readFile(t, "testdata/coverage.out"))
+		if err := command(stdin, &stdout); err != nil {
+			t.Fatal(err)
+		}
+
+		got := stdout.String()
+		want := readFile(t, "testdata/coverdiff.out")
+		if got != want {
+			t.Errorf("got len=%d, want len=%d", len(got), len(want))
+		}
+	})
+
+	t.Run("from-stdin-dash", func(t *testing.T) {
+		os.Args[1] = "-"
+		flag.Parse()
 
 		var stdout bytes.Buffer
 		stdin := bytes.NewBufferString(readFile(t, "testdata/coverage.out"))
@@ -32,6 +51,7 @@ func TestCommand(t *testing.T) {
 
 	t.Run("from-file", func(t *testing.T) {
 		os.Args[1] = filepath.Join(projectPath, "testdata/coverage.out")
+		flag.Parse()
 
 		var stdout bytes.Buffer
 		if err := command(nil, &stdout); err != nil {
@@ -55,6 +75,7 @@ func TestCommand(t *testing.T) {
 			}
 		})
 		os.Args[1] = filepath.Join(projectPath, "testdata/coverage.out")
+		flag.Parse()
 
 		var stdout bytes.Buffer
 		if err := command(nil, &stdout); err != nil {
@@ -78,6 +99,24 @@ func TestCommand(t *testing.T) {
 		want := "findModuleDir: no go.mod file found"
 		if got != want {
 			t.Errorf("got %s, want: %s", got, want)
+		}
+	})
+
+	t.Run("run-go-tests", func(t *testing.T) {
+		os.Args[1] = "test"
+		flag.Parse()
+
+		changeDir(t, "testdata")
+
+		var stdout bytes.Buffer
+		if err := command(nil, &stdout); err != nil {
+			t.Fatal(err)
+		}
+
+		got := stdout.String()
+		want := readFile(t, "coverdiff.out")
+		if got != want {
+			t.Errorf("got len=%d, want len=%d", len(got), len(want))
 		}
 	})
 }

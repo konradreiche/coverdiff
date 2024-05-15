@@ -16,11 +16,14 @@ go install github.com/konradreiche/coverdiff@latest
 ```
 Usage:
 	coverdiff [file]
+	coverdiff test
 
 Flags:
 	-h, --help	print help text
 
 Examples:
+
+	coverdiff test
 
 	go test -cover -coverprofile=coverage.out
 	cat coverage.out | coverdiff
