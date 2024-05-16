@@ -1,27 +1,24 @@
 package main
 
 import (
+	"bytes"
 	"flag"
-	"fmt"
 	"io"
-	"os"
 	"os/exec"
+	"strings"
 
 	"golang.org/x/tools/cover"
 )
 
 func command(stdin io.Reader, stdout io.Writer) error {
-	var (
-		fileName string
-		err      error
-	)
+	var fileName string
 	switch flag.CommandLine.Arg(0) {
 	case "test":
-		fileName, err = runGoTests()
+		output, err := runGoTests()
 		if err != nil {
 			return err
 		}
-		defer deleteTempFile(fileName)
+		stdin = output
 	case "-":
 	// user explicitly specified to use stdin
 	default:
@@ -43,23 +40,29 @@ func command(stdin io.Reader, stdout io.Writer) error {
 	return printDiff(stdout, profiles, moduleInfo)
 }
 
-func runGoTests() (string, error) {
-	f, err := os.CreateTemp(os.TempDir(), "coverdiff-*")
+func runGoTests() (*bytes.Buffer, error) {
+	cmd := exec.Command(
+		"go",
+		"test",
+		"./...",
+		"-json",
+		"-cover",
+		"-coverprofile=/dev/stdout",
+	)
+	b, err := cmd.CombinedOutput()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	cmd := exec.Command("go", "test", "./...", "-cover", "-coverprofile="+f.Name())
-	if err := cmd.Run(); err != nil {
-		return "", err
+	var lines []string
+	for _, line := range strings.Split(string(b), "\n") {
+		// filter Go JSON test output
+		if strings.HasPrefix(line, `{"Time"`) {
+			continue
+		}
+		lines = append(lines, line)
 	}
-	return f.Name(), nil
-}
-
-func deleteTempFile(fileName string) {
-	if err := os.Remove(fileName); err != nil {
-		fmt.Fprintln(os.Stderr, fmt.Errorf("coverdiff: %w", err))
-		os.Exit(1)
-	}
+	coverProfile := strings.Join(lines, "\n")
+	return bytes.NewBufferString(coverProfile), nil
 }
 
 func parseCoverProfiles(fileName string, stdin io.Reader) ([]*cover.Profile, error) {
