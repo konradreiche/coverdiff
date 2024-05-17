@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -37,7 +38,33 @@ func command(stdin io.Reader, stdout io.Writer) error {
 	if err != nil {
 		return err
 	}
+
+	if pager := os.ExpandEnv("$PAGER"); pager != "" {
+		return usePager(pager, stdout, func(w io.Writer) error {
+			return printDiff(w, profiles, moduleInfo)
+		})
+	}
 	return printDiff(stdout, profiles, moduleInfo)
+}
+
+func usePager(
+	name string,
+	stdout io.Writer,
+	printDiff func(io.Writer) error,
+) error {
+	cmd := exec.Command(name)
+	cmd.Stdout = stdout
+	w, err := cmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		defer w.Close()
+		printDiff(w)
+	}()
+
+	return cmd.Run()
 }
 
 func runGoTests() (*bytes.Buffer, error) {

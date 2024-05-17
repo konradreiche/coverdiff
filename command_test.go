@@ -9,6 +9,9 @@ import (
 )
 
 func TestCommand(t *testing.T) {
+	// ensure only specific pager tests execute with custom pager
+	t.Setenv("PAGER", "")
+
 	t.Run("from-stdin-pipe", func(t *testing.T) {
 		args := os.Args
 		t.Cleanup(func() { os.Args = args })
@@ -115,6 +118,30 @@ func TestCommand(t *testing.T) {
 
 		got := stdout.String()
 		want := readFile(t, "coverdiff.out")
+		if got != want {
+			t.Errorf("got len=%d, want len=%d", len(got), len(want))
+		}
+	})
+
+	t.Run("print-with-pager", func(t *testing.T) {
+		args := os.Args
+		t.Setenv("PAGER", "less")
+		t.Cleanup(func() { os.Args = args })
+
+		// override os.Args which contains flags from the test binary
+		os.Args = []string{
+			"coverdiff",
+		}
+		flag.Parse()
+
+		var stdout bytes.Buffer
+		stdin := bytes.NewBufferString(readFile(t, "testdata/coverage.out"))
+		if err := command(stdin, &stdout); err != nil {
+			t.Fatal(err)
+		}
+
+		got := stdout.String()
+		want := readFile(t, "testdata/coverdiff.out")
 		if got != want {
 			t.Errorf("got len=%d, want len=%d", len(got), len(want))
 		}
