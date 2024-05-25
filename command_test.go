@@ -107,6 +107,7 @@ func TestCommand(t *testing.T) {
 
 	t.Run("run-go-tests", func(t *testing.T) {
 		os.Args[1] = "test"
+		os.Args[2] = "./size"
 		flag.Parse()
 
 		changeDir(t, "testdata")

@@ -15,7 +15,8 @@ func command(stdin io.Reader, stdout io.Writer) error {
 	var fileName string
 	switch flag.CommandLine.Arg(0) {
 	case "test":
-		output, err := runGoTests()
+		packages := flag.CommandLine.Arg(1)
+		output, err := runGoTests(packages)
 		if err != nil {
 			return err
 		}
@@ -67,7 +68,7 @@ func usePager(
 	return cmd.Run()
 }
 
-func runGoTests() (*bytes.Buffer, error) {
+func runGoTests(packages string) (*bytes.Buffer, error) {
 	tempFile, err := createTempFile()
 	if err != nil {
 		return nil, err
@@ -77,7 +78,7 @@ func runGoTests() (*bytes.Buffer, error) {
 	cmd := exec.Command(
 		"go",
 		"test",
-		"./...",
+		packages,
 		"-cover",
 		"-coverprofile="+tempFile.Name(),
 	)
