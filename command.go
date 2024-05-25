@@ -2,11 +2,11 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"io"
 	"os"
 	"os/exec"
-	"strings"
 
 	"golang.org/x/tools/cover"
 )
@@ -68,28 +68,31 @@ func usePager(
 }
 
 func runGoTests() (*bytes.Buffer, error) {
+	tempFile, err := createTempFile()
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(tempFile.Name())
+
 	cmd := exec.Command(
 		"go",
 		"test",
 		"./...",
-		"-json",
 		"-cover",
-		"-coverprofile=/dev/stdout",
+		"-coverprofile="+tempFile.Name(),
 	)
 	b, err := cmd.CombinedOutput()
 	if err != nil {
+		if _, ok := err.(*exec.ExitError); ok {
+			return nil, errors.New(string(b))
+		}
 		return nil, err
 	}
-	var lines []string
-	for _, line := range strings.Split(string(b), "\n") {
-		// filter Go JSON test output
-		if strings.HasPrefix(line, `{"Time"`) {
-			continue
-		}
-		lines = append(lines, line)
+	coverprofile, err := os.ReadFile(tempFile.Name())
+	if err != nil {
+		return nil, err
 	}
-	coverProfile := strings.Join(lines, "\n")
-	return bytes.NewBufferString(coverProfile), nil
+	return bytes.NewBuffer(coverprofile), nil
 }
 
 func parseCoverProfiles(fileName string, stdin io.Reader) ([]*cover.Profile, error) {
